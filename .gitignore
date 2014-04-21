@@ -4,7 +4,7 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.ear
 
@@ -14,5 +14,5 @@ hs_err_pid*
 # Eclipse configuration files
 
 /bin
-/.classpath
+#/.classpath
 /.settings
