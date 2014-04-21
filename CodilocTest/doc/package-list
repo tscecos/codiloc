@@ -1,0 +1,5 @@
+net.tsc.codiloc.filemanager.model
+net.tsc.codiloc.loccomparator.model
+net.tsc.codiloc.loccounter.model
+net.tsc.codiloc.loccounter.utils
+net.tsc.codiloc.versionmanager.model
