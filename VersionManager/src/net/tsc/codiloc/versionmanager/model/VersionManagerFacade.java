@@ -21,6 +21,9 @@ import net.tsc.codiloc.versionmanager.exception.VersionManagerException;
  */
 public class VersionManagerFacade {
 
+	public static final String BASE_PATH = "..\\VersionManager\\codiloc\\base\\";
+	public static final String HISTORY_PATH = "..\\VersionManager\\codiloc\\history\\";
+
 	/**
 	 * logger - Bitácora
 	 */
@@ -95,16 +98,17 @@ public class VersionManagerFacade {
 	 * @throws IllegalArgumentException
 	 *             Si <code>comparedLine</code> es <code>null</code>,
 	 */
-	public int countComparedLOC(List<ComparedLine> comparedLine) throws VersionManagerException{
+	public int countComparedLOC(List<ComparedLine> comparedLine)
+			throws VersionManagerException {
 		int lines = 0;
-		
+
 		if (comparedLine == null)
 			throw new IllegalArgumentException("comparedLine must not be null");
-		
-		for(ComparedLine line : comparedLine){
+
+		for (ComparedLine line : comparedLine) {
 			lines += countLOC(line.getTextLine());
 		}
-		
+
 		return lines;
 	}
 
@@ -114,30 +118,30 @@ public class VersionManagerFacade {
 	 * @param originalFilePath
 	 *            Ruta del archivo fuente original.
 	 * @param modifiedFilePath
-//	 *            Ruta del archivo fuente modificado.
+	 *            // * Ruta del archivo fuente modificado.
 	 * @return Ruta del archivo de modificaciones.
 	 * @throws VersionManagerException
 	 *             Si ocurre un error en el manejo de versiones.
 	 */
 	public String compareVersions(String originalFilePath,
 			String modifiedFilePath) throws VersionManagerException {
-		
+
 		List<String> originalLines = null;
 		List<String> modifiedLines = null;
-		
+
 		ComparatorFacade comparator = ComparatorFacade.getInstance();
 		FileManagerFacade fileManager = FileManagerFacade.getInstance();
 
 		File originalFile = new File(originalFilePath);
 		File modifiedFile = new File(modifiedFilePath);
-		
+
 		try {
 			originalLines = fileManager.getLinesFromFile(originalFile);
 			modifiedLines = fileManager.getLinesFromFile(modifiedFile);
 		} catch (FileManagerException e) {
 			logger.severe(e.getMessage());
 		}
-		
+
 		try {
 			addedLinesList = comparator.getAddedLOC(originalLines,
 					modifiedLines);
@@ -146,11 +150,11 @@ public class VersionManagerFacade {
 
 			addedLines = countComparedLOC(addedLinesList);
 			deletedLines = countComparedLOC(deletedLinesList);
-			
-			for(String line : modifiedLines){
+
+			for (String line : modifiedLines) {
 				totalLines += countLOC(line);
 			}
-			
+
 		} catch (ComparatorException e) {
 			logger.severe(e.getMessage());
 			System.exit(-1);
@@ -164,15 +168,83 @@ public class VersionManagerFacade {
 		System.out.println("\nLíneas adicionadas: " + addedLines);
 
 		for (ComparedLine line : addedLinesList) {
-			System.out.println(line.getTextLineNumber() + " - " + line.getTextLine());
+			System.out.println(line.getTextLineNumber() + " - "
+					+ line.getTextLine());
 		}
 
 		System.out.println("\nLíneas eliminadas: " + deletedLines);
 
 		for (ComparedLine line : deletedLinesList) {
-			System.out.println(line.getTextLineNumber() + " - " + line.getTextLine());
+			System.out.println(line.getTextLineNumber() + " - "
+					+ line.getTextLine());
 		}
 
 		System.out.println("\nLíneas totales: " + totalLines);
 	}
+
+	/**
+	 * Método que cargará en memoria el archivo base.
+	 * 
+	 * @param fileName
+	 *            Nombre y extensión del archivo que se va a comparar
+	 * @return Líneas del archivo base
+	 * @throws VersionManagerException
+	 */
+	public List<String> loadBase(String fileName)
+			throws VersionManagerException {
+
+		File baseFile = new File(BASE_PATH + fileName);
+
+		try {
+			return loadFile(baseFile);
+		} catch (FileManagerException e) {
+			throw new VersionManagerException("Exception loading base file", e);
+		}
+
+	}
+
+	/**
+	 * Método que cargará en memoria el archivo histórico.
+	 * 
+	 * @param fileName
+	 *            Nombre y extensión del archivo que se va a comparar
+	 * @return Líneas del archivo histórico
+	 * @throws VersionManagerException
+	 */
+	public List<String> loadHistory(String fileName)
+			throws VersionManagerException {
+
+		File historyFile = new File(HISTORY_PATH + fileName);
+		try {
+			return loadFile(historyFile);
+		} catch (FileManagerException e) {
+			throw new VersionManagerException("Exception loading history file",
+					e);
+		}
+	}
+
+	/**
+	 * Método que carga el contenido de un archivo en una lista de líneas.
+	 * 
+	 * @param file
+	 *            Archivo a cargar
+	 * @return Líneas del archivo
+	 * @throws FileManagerException
+	 */
+	private List<String> loadFile(File file) throws FileManagerException {
+
+		FileManagerFacade fileManager = FileManagerFacade.getInstance();
+
+		if (file.exists()) {
+			try {
+				return fileManager.getLinesFromFile(file);
+			} catch (FileManagerException fme) {
+				throw fme;
+			}
+		} else {
+			return null;
+		}
+
+	}
+
 }
