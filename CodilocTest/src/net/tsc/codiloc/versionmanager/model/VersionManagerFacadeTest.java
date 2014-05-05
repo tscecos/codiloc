@@ -72,5 +72,29 @@ public class VersionManagerFacadeTest {
 		}
 
 	}
+	
+	@Test
+	public void loadBase() throws VersionManagerException {
+		
+		String fileName = "ComparedLine.java";
+		VersionManagerFacade versionManager = VersionManagerFacade.getInstance();
+		
+		List<String> baseLines = versionManager.loadBase(fileName);
+		assertEquals(61, baseLines.size());
+		assertEquals("package net.tsc.codiloc.loccomparator.model;", baseLines.get(0));
+		assertEquals("}", baseLines.get(60));
+		
+	}
+	
+	@Test
+	public void loadHistory() throws VersionManagerException {
+		
+		String fileName = "ComparedLine.java";
+		VersionManagerFacade versionManager = VersionManagerFacade.getInstance();
+		
+		List<String> historyLines = versionManager.loadHistory(fileName);
+		assertEquals(null, historyLines);
+		
+	}
 
 }
