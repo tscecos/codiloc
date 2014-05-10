@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -222,7 +221,10 @@ public class VersionManagerFacade {
 		return "En proceso...";
 	}
 
-	public void print() {
+	/**
+	 * Permite presentar losresultados obtenidos al validar el archivo modificado contra su linea base.
+	 */
+	public void showResult() {
 		System.out.println("RESULTADO DE LA COMPARACION");
 		System.out.println("\nLíneas adicionadas: " + addedLines);
 
@@ -236,10 +238,14 @@ public class VersionManagerFacade {
 		for (ComparedLine line : deletedLinesList) {
 			System.out.println(line.getTextLineNumber() + " - "
 					+ line.getTextLine());
+
 		}
 
 		System.out.println("\nLíneas totales: " + totalLines);
+
+		System.out.println("\nDirectorio y archivo de resultados: " + urlHistoryFile);
 	}
+	
 	/**
 	 * Método que cargará en memoria el archivo base.
 	 * 
