@@ -1,6 +1,7 @@
 package net.tsc.codiloc.versionmanager.model;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import net.tsc.codiloc.loccomparator.model.ComparatorFacade;
 import net.tsc.codiloc.loccomparator.model.ComparedLine;
 import net.tsc.codiloc.loccounter.exception.LOCCounterException;
 import net.tsc.codiloc.loccounter.model.LOCFacade;
+import net.tsc.codiloc.loccounter.utils.TextUtils;
 import net.tsc.codiloc.versionmanager.exception.VersionManagerException;
 
 /**
@@ -127,29 +129,29 @@ public class VersionManagerFacade {
 	 * Compara dos versiones de código fuente.
 	 * 
 	 * @param modifiedFilePath
-     *            Ruta del archivo fuente modificado.
-     * @param user
-     * 			  Usuario que modifica el archivo.
-     * @param comment
-     * 			  Descripción de la modificación. 
+	 *            Ruta del archivo fuente modificado.
+	 * @param user
+	 *            Usuario que modifica el archivo.
+	 * @param comment
+	 *            Descripción de la modificación.
 	 * @return Ruta del archivo de modificaciones.
 	 * @throws VersionManagerException
 	 *             Si ocurre un error en el manejo de versiones.
 	 */
-	public String compareVersions(String modifiedFilePath,
-			String user, String comment) throws VersionManagerException {
-		
+	public String compareVersions(String modifiedFilePath, String user,
+			String comment) throws VersionManagerException {
+
 		List<String> originalLines = null;
 		List<String> modifiedLines = null;
 		List<String> historyLines = null;
-		Map<String,String> parametersMap = null;
+		Map<String, String> parametersMap = null;
 		String version = "";
-		
+
 		ComparatorFacade comparator = ComparatorFacade.getInstance();
 		FileManagerFacade fileManager = FileManagerFacade.getInstance();
 
 		File modifiedFile = new File(modifiedFilePath);
-		
+
 		try {
 			historyLines = loadHistory(modifiedFilePath);
 			originalLines = loadBase(modifiedFilePath);
@@ -157,7 +159,7 @@ public class VersionManagerFacade {
 		} catch (FileManagerException e) {
 			logger.severe(e.getMessage());
 		}
-		
+
 		try {
 			addedLinesList = comparator.getAddedLOC(originalLines,
 					modifiedLines);
@@ -166,26 +168,29 @@ public class VersionManagerFacade {
 
 			addedLines = countComparedLOC(addedLinesList);
 			deletedLines = countComparedLOC(deletedLinesList);
-			
-			for(String line : modifiedLines){
+
+			for (String line : modifiedLines) {
 				totalLines += countLOC(line);
 			}
-			
+
 			parametersMap = new HashMap<>();
 			parametersMap.put(USER_KEY, user);
 			parametersMap.put(COMMENT_KEY, comment);
-			parametersMap.put(TOTAL_LINES_ADDED_KEY, String.valueOf(addedLines));
-			parametersMap.put(TOTAL_LINES_DELETED_KEY, String.valueOf(deletedLines));
+			parametersMap
+					.put(TOTAL_LINES_ADDED_KEY, String.valueOf(addedLines));
+			parametersMap.put(TOTAL_LINES_DELETED_KEY,
+					String.valueOf(deletedLines));
 			parametersMap.put(TOTAL_LINES_KEY, String.valueOf(totalLines));
-			
-			version = addHeader(parametersMap,historyLines);
-			
-			addTags(addedLinesList,historyLines,version,ADDED_ID);
-			addTags(deletedLinesList,historyLines,version,DELETED_ID);
-			
-			writeBase(modifiedLines);
-			this.urlHistoryFile = writeHistory(this.historyLines);
-			
+
+			version = addHeader(parametersMap, historyLines);
+
+			addTags(addedLinesList, historyLines, version, ADDED_ID);
+			addTags(deletedLinesList, historyLines, version, DELETED_ID);
+
+			writeBase(modifiedFilePath, modifiedLines);
+			this.urlHistoryFile = writeHistory(modifiedFilePath,
+					this.historyLines);
+
 		} catch (ComparatorException e) {
 			logger.severe(e.getMessage());
 			System.exit(-1);
@@ -278,4 +283,80 @@ public class VersionManagerFacade {
 
 	}
 
+	/**
+	 * Escribe la versión comparada en el archivo base.
+	 * 
+	 * @param modifiedFilePath
+	 *            Archivo que se va a comparar.
+	 * 
+	 * @param modifiedLines
+	 *            Líneas producto de la compración.
+	 * @throws IllegalArgumentException
+	 *             Si <code>modifiedLines</code> es <code>null</code> o
+	 *             <code>modifiedLines</code> es vacío.
+	 * @throws VersionManagerException
+	 *             Si ocurre un error escribiendo el archivo.
+	 */
+	private void writeBase(String modifiedFilePath, List<String> modifiedLines)
+			throws VersionManagerException {
+		writeResultFile(BASE_PATH + modifiedFilePath, modifiedLines);
+	}
+
+	/**
+	 * Escribe el resultado de comparación en el archivo histórico.
+	 * 
+	 * @param modifiedFilePath
+	 *            Archivo que se va a comparar.
+	 * 
+	 * @param historyLines
+	 *            Líneas producto de la compración.
+	 * @return Ruta del archivo histórico
+	 * @throws IllegalArgumentException
+	 *             Si <code>modifiedLines</code> es <code>null</code> o
+	 *             <code>modifiedLines</code> es vacío.
+	 * @throws VersionManagerException
+	 *             Si ocurre un error escribiendo el archivo.
+	 */
+	private String writeHistory(String modifiedFilePath,
+			List<String> historyLines) throws VersionManagerException {
+		String historyFile = HISTORY_PATH + modifiedFilePath;
+		writeResultFile(historyFile + modifiedFilePath, historyLines);
+		return historyFile;
+	}
+
+	/**
+	 * Escribe el resultado de la comparación en un archivo resultado.
+	 * 
+	 * @param file
+	 *            Archivo a escribir.
+	 * @param lines
+	 *            Líneas producto de la compración.
+	 * @throws VersionManagerException
+	 *             Si ocurre un error escribiendo el archivo.
+	 */
+	private void writeResultFile(String file, List<String> lines)
+			throws VersionManagerException {
+		if (TextUtils.isBlank(file))
+			throw new IllegalArgumentException("file must not be empty");
+		if (lines == null)
+			throw new IllegalArgumentException("lines must not be null");
+		File base = new File(file);
+		if (!base.exists()) {
+			try {
+				base.createNewFile();
+			} catch (IOException e) {
+				String msg = "A IOException occurred at VersionManagerFacade.writeResultFile";
+				logger.severe(msg + "\n" + e);
+				throw new VersionManagerException(msg, e);
+			}
+		}
+		FileManagerFacade fileManagerFacade = FileManagerFacade.getInstance();
+		try {
+			fileManagerFacade.writeLinesToFiles(base, lines);
+		} catch (FileManagerException e) {
+			String msg = "A FileManagerException occurred at VersionManagerFacade.writeResultFile";
+			logger.severe(msg + "\n" + e);
+			throw new VersionManagerException(msg, e);
+		}
+	}
 }
