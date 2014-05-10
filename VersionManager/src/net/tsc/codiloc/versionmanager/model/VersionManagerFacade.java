@@ -24,8 +24,8 @@ import net.tsc.codiloc.versionmanager.exception.VersionManagerException;
  */
 public class VersionManagerFacade {
 
-	public static final String BASE_PATH = "..\\VersionManager\\codiloc\\base\\";
-	public static final String HISTORY_PATH = "..\\VersionManager\\codiloc\\history\\";
+	public static final String BASE_PATH = "\\VersionManager\\codiloc\\base\\";
+	public static final String HISTORY_PATH = "\\VersionManager\\codiloc\\history\\";
 	public static final String ADDED_ID = "A";
 	public static final String DELETED_ID = "D";
 	public static final String USER_KEY = "USER";
@@ -51,6 +51,7 @@ public class VersionManagerFacade {
 	private List<ComparedLine> addedLinesList;
 	private List<ComparedLine> deletedLinesList;
 	private List<String> historyLines;
+	private String urlHistoryFile;
 
 	/**
 	 * Inicializa la fachada asegurando el singleton.
@@ -136,7 +137,7 @@ public class VersionManagerFacade {
 	 * @throws VersionManagerException
 	 *             Si ocurre un error en el manejo de versiones.
 	 */
-	public String compareVersions(String modifiedFilePath,
+	public String compare(String modifiedFilePath,
 			String user, String comment) throws VersionManagerException {
 		
 		List<String> originalLines = null;
@@ -216,15 +217,18 @@ public class VersionManagerFacade {
 	/**
 	 * Método que cargará en memoria el archivo base.
 	 * 
-	 * @param fileName
+	 * @param filePath
 	 *            Nombre y extensión del archivo que se va a comparar
 	 * @return Líneas del archivo base
 	 * @throws VersionManagerException
 	 */
-	public List<String> loadBase(String fileName)
+	public List<String> loadBase(String filePath)
 			throws VersionManagerException {
 
-		File baseFile = new File(BASE_PATH + fileName);
+		String directory = filePath.substring(0, filePath.lastIndexOf("\\"));
+		String fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+
+		File baseFile = new File(directory + BASE_PATH + fileName);
 
 		try {
 			return loadFile(baseFile);
@@ -242,10 +246,13 @@ public class VersionManagerFacade {
 	 * @return Líneas del archivo histórico
 	 * @throws VersionManagerException
 	 */
-	public List<String> loadHistory(String fileName)
+	public List<String> loadHistory(String filePath)
 			throws VersionManagerException {
 
-		File historyFile = new File(HISTORY_PATH + fileName);
+		String directory = filePath.substring(0, filePath.lastIndexOf("\\"));
+		String fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+
+		File historyFile = new File(directory + HISTORY_PATH + fileName);
 		try {
 			return loadFile(historyFile);
 		} catch (FileManagerException e) {
