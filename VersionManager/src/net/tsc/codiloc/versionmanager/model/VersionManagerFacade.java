@@ -347,4 +347,60 @@ public class VersionManagerFacade {
 
 		return ver+"";
 	}
+	
+	/**
+	 * Adiciona los Tags de las líneas adicionadas o modificadas al archivo Log
+	 * 
+	 * @param comparedLines
+	 * 			Líneas comparadas entre dos versiones.
+	 * @param historyLines
+	 * 			Archivo log que contiene las líneas adicionadas y eliminadas
+	 * @param versionNumber
+	 * 			Versión del cambio a colocar en el Tag
+	 * @param identifier
+	 * 			Identifica si se envía lista de líneas adicionadas o líneas eliminadas
+	 * @throws VersionManagerException
+	 * 				Si ocurre un error en el manejo de versiones.
+	 */
+	public void addTags (List<ComparedLine> comparedLines, List<String> historyLines, String versionNumber, String identifier) throws VersionManagerException {
+		
+		String buildTag = "";
+		String historyLine = "";
+		String textIdentifier = "";
+		
+		if (comparedLines == null)
+			throw new IllegalArgumentException("comparedLines must not be null");
+		
+		if (historyLines == null)
+			throw new IllegalArgumentException("historyLines must not be null");
+		
+		if(identifier.toUpperCase().equals("A")){
+			textIdentifier = "adicionada";
+		}
+		else{
+			textIdentifier = "eliminada";
+		}
+		
+		int totalLinesHistoryLines = historyLines.size();
+		
+		for(int i = totalLinesHistoryLines - 1; i > 0; i--){
+			if(historyLines.get(i).contains("<<---END HEADER--->>")){
+				totalLinesHistoryLines = i + 2;
+				break;
+			}
+			totalLinesHistoryLines = 0;
+		}
+		
+		int lineNumber = 0;
+		for(ComparedLine line : comparedLines){
+			buildTag = "";
+			lineNumber = line.getTextLineNumber() + totalLinesHistoryLines;
+			historyLine = historyLines.get(lineNumber);
+			if(historyLine.contains(line.getTextLine())){
+				buildTag = "//<<Versión: " + versionNumber + " Línea " + textIdentifier + ": " + line.getTextLine() + ">>";
+				historyLines.set(lineNumber, historyLines.get(lineNumber) + " " + buildTag);
+			}
+		}		
+		setHistoryLines(historyLines);
+	}
 }

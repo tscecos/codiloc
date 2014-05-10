@@ -215,5 +215,90 @@ public class VersionManagerFacadeTest {
 			e.printStackTrace();
 		}
 	}
+	
+	@Test
+	public void addTags() throws VersionManagerException {
+		
+		ComparedLine pushLine;
+		List<ComparedLine> comparedLines = new ArrayList<>();
+		List<String> historyLines = new ArrayList<String>();
+		List<String> resultHistoryLines = new ArrayList<String>();
+		
+		pushLine = new ComparedLine("int edad = 22;", 0);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("if(comparedText.equal(\"hola mundo\")){", 1);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("String name = \"mi nombre es\";", 2);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("int total = 1233;", 3);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("bool flag = false;", 4);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("int cost = 345;", 5);
+		comparedLines.add(pushLine);
+		
+		historyLines.add("int edad = 22;");
+		historyLines.add("if(comparedText.equal(\"hola mundo\")){");
+		historyLines.add("String name = \"mi nombre es\";");
+		historyLines.add("int total = 1233;");
+		historyLines.add("bool flag = false;");
+		historyLines.add("int cost = 345;");
+		
+		VersionManagerFacade versionManager = VersionManagerFacade.getInstance();
+		versionManager.addTags(comparedLines, historyLines, "1.0", "A");
+		resultHistoryLines = versionManager.getHistoryLines();
+		assertEquals("int edad = 22; //<<Versión: 1.0 Línea adicionada: int edad = 22;>>", resultHistoryLines.get(0));
+		assertEquals("if(comparedText.equal(\"hola mundo\")){ //<<Versión: 1.0 Línea adicionada: if(comparedText.equal(\"hola mundo\")){>>", resultHistoryLines.get(1));
+		assertEquals("String name = \"mi nombre es\"; //<<Versión: 1.0 Línea adicionada: String name = \"mi nombre es\";>>", resultHistoryLines.get(2));
+		assertEquals("int total = 1233; //<<Versión: 1.0 Línea adicionada: int total = 1233;>>", resultHistoryLines.get(3));
+		assertEquals("bool flag = false; //<<Versión: 1.0 Línea adicionada: bool flag = false;>>", resultHistoryLines.get(4));
+		assertEquals("int cost = 345; //<<Versión: 1.0 Línea adicionada: int cost = 345;>>", resultHistoryLines.get(5));
+	}
+	
+	@Test
+	public void addTagsWithHeader() throws VersionManagerException {
+		
+		ComparedLine pushLine;
+		List<ComparedLine> comparedLines = new ArrayList<>();
+		List<String> historyLines = new ArrayList<String>();
+		List<String> resultHistoryLines = new ArrayList<String>();
+		
+		pushLine = new ComparedLine("int edad = 22;", 0);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("if(comparedText.equal(\"hola mundo\")){", 1);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("String name = \"mi nombre es\";", 2);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("int total = 1233;", 3);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("bool flag = false;", 4);
+		comparedLines.add(pushLine);
+		pushLine = new ComparedLine("int cost = 345;", 5);
+		comparedLines.add(pushLine);
+		
+		historyLines.add("/*<<---HEADER--->>");
+		historyLines.add("*<<VER:0>>");
+		historyLines.add("*<<DATETIME:");
+		historyLines.add("*<<Autor:Mauricio Torres>>");
+		historyLines.add("*<<Observaciones:nueva clase que hace algo>>");
+		historyLines.add("*<<---END HEADER--->>");
+		historyLines.add("*/");
+		historyLines.add("int edad = 22;");
+		historyLines.add("if(comparedText.equal(\"hola mundo\")){");
+		historyLines.add("String name = \"mi nombre es\";");
+		historyLines.add("int total = 1233;");
+		historyLines.add("bool flag = false;");
+		historyLines.add("int cost = 345;");
+		
+		VersionManagerFacade versionManager = VersionManagerFacade.getInstance();
+		versionManager.addTags(comparedLines, historyLines, "1.0", "D");
+		resultHistoryLines = versionManager.getHistoryLines();
+		assertEquals("int edad = 22; //<<Versión: 1.0 Línea eliminada: int edad = 22;>>", resultHistoryLines.get(7));
+		assertEquals("if(comparedText.equal(\"hola mundo\")){ //<<Versión: 1.0 Línea eliminada: if(comparedText.equal(\"hola mundo\")){>>", resultHistoryLines.get(8));
+		assertEquals("String name = \"mi nombre es\"; //<<Versión: 1.0 Línea eliminada: String name = \"mi nombre es\";>>", resultHistoryLines.get(9));
+		assertEquals("int total = 1233; //<<Versión: 1.0 Línea eliminada: int total = 1233;>>", resultHistoryLines.get(10));
+		assertEquals("bool flag = false; //<<Versión: 1.0 Línea eliminada: bool flag = false;>>", resultHistoryLines.get(11));
+		assertEquals("int cost = 345; //<<Versión: 1.0 Línea eliminada: int cost = 345;>>", resultHistoryLines.get(12));
+	}
 
 }
