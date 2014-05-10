@@ -3,6 +3,7 @@ package net.tsc.codiloc.filemanager.model;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import net.tsc.codiloc.filemanager.exception.FileManagerException;
@@ -21,6 +22,11 @@ import org.junit.Test;
  */
 public class FileManagerFacadeTest {
 
+	/**
+	 * FILE_TEST_PATH_WRITE - Ruta relativa se escribe el archivo.
+	 */
+	private static final String FILE_TEST_WRITE_PATH = "../files/TestWrite.txt";
+	
 	/**
 	 * FILE_TEST_PATH - Ruta relativa donde se encuentra el archivo de pruebas.
 	 */
@@ -45,6 +51,16 @@ public class FileManagerFacadeTest {
 	 * badFile - Archivo ficticio(no existe).
 	 */
 	private static File badFile = null;
+	
+	/**
+	 * writeFile - Archivo de pruebas para escribir
+	 */
+	private static File writeFile = null;
+	
+	/**
+	 * fileLines - Lista de lineas del archivo.
+	 */
+	private static List<String> fileLines = null;
 
 	/**
 	 * singleton - Instancia singleton de <code>FileManagerFacade</code>.
@@ -62,6 +78,8 @@ public class FileManagerFacadeTest {
 		testFile = new File(FILE_TEST_PATH);
 		singleton = FileManagerFacade.getInstance();
 		badFile = new File(FILE_BAD_TEST_PATH);
+		fileLines = new ArrayList<>();
+		writeFile = new File(FILE_TEST_WRITE_PATH);
 	}
 
 	/**
@@ -75,6 +93,8 @@ public class FileManagerFacadeTest {
 		testFile = null;
 		singleton = null;
 		badFile = null;
+		fileLines = null;
+		writeFile = null;
 	}
 
 	/**
@@ -128,5 +148,48 @@ public class FileManagerFacadeTest {
 	@Test(expected = FileManagerException.class)
 	public void testGetLinesFromFile02() throws FileManagerException {
 		FileManagerFacade.getInstance().getLinesFromFile(badFile);
+	}
+	
+	/**
+	 * Prueba que se lance <code>IllegalArgumentException</code> si el parámetro
+	 * archivo es <code>null</code>.
+	 * 
+	 * @throws FileManagerException
+	 *             Cuando ocurre un error escribiendo el archivo
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testWriteLinesToFiles00() throws FileManagerException {
+		FileManagerFacade.getInstance().writeLinesToFiles(null, fileLines);
+	}
+	
+	/**
+	 * Prueba que se lance <code>IllegalArgumentException</code> si el parámetro
+	 * lines es <code>null</code>.
+	 * 
+	 * @throws FileManagerException
+	 *             Cuando ocurre un error escribiendo el archivo
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testWriteLinesToFiles01() throws FileManagerException {
+		FileManagerFacade.getInstance().writeLinesToFiles(testFile, null);
+	}
+	
+	/**
+	 * Prueba que se se escriba un archivo.
+	 * 
+	 * @throws FileManagerException
+	 *             Cuando ocurre un error escribiendo el archivo
+	 */
+	@Test
+	public void testWriteLinesToFiles02() throws FileManagerException {
+		List<String> linesTest01 = FileManagerFacade.getInstance()
+				.getLinesFromFile(testFile);
+		FileManagerFacade.getInstance().writeLinesToFiles(writeFile, linesTest01);
+		
+		List<String> linesTest02 = FileManagerFacade.getInstance()
+				.getLinesFromFile(writeFile);
+		
+		Assert.assertTrue(linesTest02.size() == 4);
+		Assert.assertTrue(linesTest02.get(2).equals(TEST_LINE_VALUE));
 	}
 }

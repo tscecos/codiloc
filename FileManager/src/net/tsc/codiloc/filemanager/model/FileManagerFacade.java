@@ -72,4 +72,31 @@ public class FileManagerFacade {
 		}
 		return lines;
 	}
+	
+	/**
+	 * Escribe un archivo a partir de un <code>file</code> y una lista 
+	 * <code>String</code>.
+	 * 
+	 * @param file
+	 *            Archivo a escribir
+	 * @param Listado de <code>String</code> representando las líneas del
+	 *         archivo.
+	 * @throws IllegalArgumentException
+	 *             Si <code>file</code> es <code>null</code>
+	 *             o si <code>lines</code> es <code>null</code>
+	 * @throws FileManagerException
+	 *             Si ocurre un error escribiendo el archivo.
+	 */
+	public void writeLinesToFiles(File file, List<String> lines) throws FileManagerException {
+		if (file == null)
+			throw new IllegalArgumentException("file must not be null");
+		if(lines == null)
+			throw new IllegalArgumentException("lines must not be null");
+		try {
+			FileUtils.writeLines(file, lines);
+		} catch (IOException e) {
+			String msg = "An IOException occurred at FileManagerFacade.writeLineToFiles";
+			throw new FileManagerException(msg, e);
+		}
+	}
 }
