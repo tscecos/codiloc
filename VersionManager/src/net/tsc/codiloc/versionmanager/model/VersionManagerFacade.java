@@ -1,7 +1,10 @@
 package net.tsc.codiloc.versionmanager.model;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import net.tsc.codiloc.filemanager.exception.FileManagerException;
@@ -23,6 +26,13 @@ public class VersionManagerFacade {
 
 	public static final String BASE_PATH = "..\\VersionManager\\codiloc\\base\\";
 	public static final String HISTORY_PATH = "..\\VersionManager\\codiloc\\history\\";
+	public static final String ADDED_ID = "A";
+	public static final String DELETED_ID = "D";
+	public static final String USER_KEY = "USER";
+	public static final String COMMENT_KEY = "COMMENT";
+	public static final String TOTAL_LINES_ADDED_KEY = "TOTAL LINES ADDED";
+	public static final String TOTAL_LINES_DELETED_KEY = "TOTAL LINES DELETED";
+	public static final String TOTAL_LINES_KEY = "TOTAL LINES";
 
 	/**
 	 * logger - Bitácora
@@ -40,6 +50,7 @@ public class VersionManagerFacade {
 	private int totalLines;
 	private List<ComparedLine> addedLinesList;
 	private List<ComparedLine> deletedLinesList;
+	private List<String> historyLines;
 
 	/**
 	 * Inicializa la fachada asegurando el singleton.
@@ -115,33 +126,38 @@ public class VersionManagerFacade {
 	/**
 	 * Compara dos versiones de código fuente.
 	 * 
-	 * @param originalFilePath
-	 *            Ruta del archivo fuente original.
 	 * @param modifiedFilePath
-	 *            // * Ruta del archivo fuente modificado.
+     *            Ruta del archivo fuente modificado.
+     * @param user
+     * 			  Usuario que modifica el archivo.
+     * @param comment
+     * 			  Descripción de la modificación. 
 	 * @return Ruta del archivo de modificaciones.
 	 * @throws VersionManagerException
 	 *             Si ocurre un error en el manejo de versiones.
 	 */
-	public String compareVersions(String originalFilePath,
-			String modifiedFilePath) throws VersionManagerException {
-
+	public String compareVersions(String modifiedFilePath,
+			String user, String comment) throws VersionManagerException {
+		
 		List<String> originalLines = null;
 		List<String> modifiedLines = null;
-
+		List<String> historyLines = null;
+		Map<String,String> parametersMap = null;
+		String version = "";
+		
 		ComparatorFacade comparator = ComparatorFacade.getInstance();
 		FileManagerFacade fileManager = FileManagerFacade.getInstance();
 
-		File originalFile = new File(originalFilePath);
 		File modifiedFile = new File(modifiedFilePath);
-
+		
 		try {
-			originalLines = fileManager.getLinesFromFile(originalFile);
+			historyLines = loadHistory(modifiedFilePath);
+			originalLines = loadBase(modifiedFilePath);
 			modifiedLines = fileManager.getLinesFromFile(modifiedFile);
 		} catch (FileManagerException e) {
 			logger.severe(e.getMessage());
 		}
-
+		
 		try {
 			addedLinesList = comparator.getAddedLOC(originalLines,
 					modifiedLines);
@@ -150,11 +166,26 @@ public class VersionManagerFacade {
 
 			addedLines = countComparedLOC(addedLinesList);
 			deletedLines = countComparedLOC(deletedLinesList);
-
-			for (String line : modifiedLines) {
+			
+			for(String line : modifiedLines){
 				totalLines += countLOC(line);
 			}
-
+			
+			parametersMap = new HashMap<>();
+			parametersMap.put(USER_KEY, user);
+			parametersMap.put(COMMENT_KEY, comment);
+			parametersMap.put(TOTAL_LINES_ADDED_KEY, String.valueOf(addedLines));
+			parametersMap.put(TOTAL_LINES_DELETED_KEY, String.valueOf(deletedLines));
+			parametersMap.put(TOTAL_LINES_KEY, String.valueOf(totalLines));
+			
+			version = addHeader(parametersMap,historyLines);
+			
+			addTags(addedLinesList,historyLines,version,ADDED_ID);
+			addTags(deletedLinesList,historyLines,version,DELETED_ID);
+			
+			writeBase(modifiedLines);
+			this.urlHistoryFile = writeHistory(this.historyLines);
+			
 		} catch (ComparatorException e) {
 			logger.severe(e.getMessage());
 			System.exit(-1);
