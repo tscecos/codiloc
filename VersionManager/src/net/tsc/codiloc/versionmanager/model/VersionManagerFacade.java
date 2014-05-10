@@ -1,6 +1,9 @@
 package net.tsc.codiloc.versionmanager.model;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +36,25 @@ public class VersionManagerFacade {
 	public static final String TOTAL_LINES_ADDED_KEY = "TOTAL LINES ADDED";
 	public static final String TOTAL_LINES_DELETED_KEY = "TOTAL LINES DELETED";
 	public static final String TOTAL_LINES_KEY = "TOTAL LINES";
+	
+	/**
+	 * Obtiene {@link #historyLines}
+	 * 
+	 * @return {@link #historyLines}
+	 */
+	public List<String> getHistoryLines() {
+		return historyLines;
+	}
+
+	/**
+	 * Establece {@link #historyLines}
+	 * 
+	 * @param historyLines
+	 *            {@link #historyLines} a ser establecido.
+	 */
+	public void setHistoryLines(List<String> historyLines) {
+		this.historyLines = historyLines;
+	}
 
 	/**
 	 * logger - Bitácora
@@ -139,18 +161,18 @@ public class VersionManagerFacade {
 	 */
 	public String compare(String modifiedFilePath,
 			String user, String comment) throws VersionManagerException {
-		
+
 		List<String> originalLines = null;
 		List<String> modifiedLines = null;
 		List<String> historyLines = null;
 		Map<String,String> parametersMap = null;
 		String version = "";
-		
+
 		ComparatorFacade comparator = ComparatorFacade.getInstance();
 		FileManagerFacade fileManager = FileManagerFacade.getInstance();
 
 		File modifiedFile = new File(modifiedFilePath);
-		
+
 		try {
 			historyLines = loadHistory(modifiedFilePath);
 			originalLines = loadBase(modifiedFilePath);
@@ -158,7 +180,7 @@ public class VersionManagerFacade {
 		} catch (FileManagerException e) {
 			logger.severe(e.getMessage());
 		}
-		
+
 		try {
 			addedLinesList = comparator.getAddedLOC(originalLines,
 					modifiedLines);
@@ -167,11 +189,11 @@ public class VersionManagerFacade {
 
 			addedLines = countComparedLOC(addedLinesList);
 			deletedLines = countComparedLOC(deletedLinesList);
-			
-			for(String line : modifiedLines){
+
+			for (String line : modifiedLines) {
 				totalLines += countLOC(line);
 			}
-			
+
 			parametersMap = new HashMap<>();
 			parametersMap.put(USER_KEY, user);
 			parametersMap.put(COMMENT_KEY, comment);
@@ -213,7 +235,6 @@ public class VersionManagerFacade {
 
 		System.out.println("\nLíneas totales: " + totalLines);
 	}
-
 	/**
 	 * Método que cargará en memoria el archivo base.
 	 * 
@@ -225,8 +246,8 @@ public class VersionManagerFacade {
 	public List<String> loadBase(String filePath)
 			throws VersionManagerException {
 
-		String directory = filePath.substring(0, filePath.lastIndexOf("\\"));
-		String fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+		String directory = filePath.substring(0, filePath.lastIndexOf("/"));
+		String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
 		File baseFile = new File(directory + BASE_PATH + fileName);
 
@@ -249,8 +270,8 @@ public class VersionManagerFacade {
 	public List<String> loadHistory(String filePath)
 			throws VersionManagerException {
 
-		String directory = filePath.substring(0, filePath.lastIndexOf("\\"));
-		String fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+		String directory = filePath.substring(0, filePath.lastIndexOf("/"));
+		String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
 		File historyFile = new File(directory + HISTORY_PATH + fileName);
 		try {
@@ -282,7 +303,48 @@ public class VersionManagerFacade {
 		} else {
 			return null;
 		}
-
 	}
 
+	/**
+	 * Agrega un encabezado al archivo histórico.
+	 * 
+	 * @param header
+	 *            Map con objetos del encabezado
+	 * @param historyLines
+	 *            Lista de lineas del archivo histórico
+	 * @throws VersionManagerException
+	 */
+	public String addHeader(Map<String, String> header,
+			List<String> historyLines) throws VersionManagerException {
+		if (header == null)
+			throw new IllegalArgumentException("header must not be null");
+		if (historyLines == null)
+			throw new IllegalArgumentException("historyLines must not be null");
+
+		int ver = 0;
+		if (historyLines.size() > 0
+				&& historyLines.get(0).contains("/*<<---HEADER--->>")) {
+			ver = Integer.parseInt(historyLines.get(1).replace("*<<VER:", "")
+					.replace(">>", "")) + 1;
+		}
+
+		SimpleDateFormat now = new SimpleDateFormat();
+
+		List<String> hdr = new ArrayList<String>();
+		hdr.add("/*<<---HEADER--->>");
+		hdr.add("*<<VER:" + ver + ">>");
+		hdr.add("*<<DATETIME:" + now.format(Calendar.getInstance().getTime())
+				+ ">>");
+
+		for (Map.Entry<String, String> entry : header.entrySet()) {
+			hdr.add("*<<" + entry.getKey() + ":" + entry.getValue() + ">>");
+		}
+		hdr.add("*<<---END HEADER--->>");
+		hdr.add("*/");
+		historyLines.addAll(0, hdr);
+		
+		this.setHistoryLines(historyLines);
+
+		return ver+"";
+	}
 }
