@@ -1,0 +1,21 @@
+CODILOC. Technological Synergy Company V1.0
+
+Lets you load a new or modified text, comparing it against historical or creating a database of the same line.
+
+CODILOC.JAR ([compare][show])[-u][-c][-m][-h][drive:][help]
+
+	*[drive:Path File] Specifies the drive, directory and file to be analyzed and compared.
+
+-u Indicates the user that is performing file for uploads and analysis 
+-c indicates a comment. Combined with [show], lets see headers changes 
+-m Set the modified file. combined with [show], you can view a list of modified programs 
+-h Displays a statistical change for a specified file 
+Lets show by combining with the above parameters ([-u][-c][-m][-h]), viewing summary and statistical information. 
+help Show this help
+
+#Usage:
+# Compare: java -jar codiloc.jar compare -u user -c comment -m modified file
+# Show modified program listing: java -jar codiloc.jar show -m modified file 
+# Show head changes for program listing: java -jar codiloc.jar show -c modified file 
+# Show statistics changes for  program: java -jar codiloc.jar show -h modified file
+# Help:  java -jar codiloc.jar help

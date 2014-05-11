@@ -1,0 +1,21 @@
+CODILOC. Technological Synergy Company V1.0
+
+Permite cargar un archivo de texto nuevo o modificado, comparandolo contra sus históricos o creando una línea base del mismo.
+
+CODILOC.JAR [-u][-c][-m][-h][show][unidad:][help]
+
+	*[unidad:ruta del archivo] Especifíca la unidad, el directorio y el archivo a ser analizado y comparado.
+
+-u	Indica que usuario está realizando el cargue y análisis del archivo
+-c	Indica un comentario. Combinado con [show], permite ver los encabezados de cambios 
+-m	Indica el archivo modificado(no es obligatorio). combinado con [show], permite ver una lista de programas modificados
+-h	Muestra un estadistico de cambios para un archivo especificado
+show	Permite mediante la combinación con los parámetros anteriores ([-u][-c][-m][-h]), visualizar información resumen y estadistica.
+help	Muestra esta ayuda
+
+#Usage:
+# Compare: java -jar codiloc.jar compare -u user -c comment -m modified file
+# Show modified program listing: java -jar codiloc.jar show -m modified file 
+# Show head changes for program listing: java -jar codiloc.jar show -c modified file 
+# Show statistics changes for  program: java -jar codiloc.jar show -h modified file
+# Help:  java -jar codiloc.jar help
